@@ -1,0 +1,119 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  password  String?  // optional — Google OAuth users won't have password
+  googleId  String?  @unique // optional + should be unique
+  avatar    String?
+  createdAt DateTime @default(now()) 
+  updatedAt DateTime @updatedAt      
+
+  refreshTokens        RefreshToken[]
+  messages             Message[]
+  conversationMembers  ConversationMember[]
+  readReceipts         MessageReadReceipt[]
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   @unique  // should be unique
+  userId    String
+  expiresAt DateTime
+  revoked   Boolean  @default(false) // needed for rotation
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Conversation {
+  id        String   @id @default(cuid())
+  isGroup   Boolean  @default(false)
+  name      String?  // group name
+  avatar    String?  // group avatar
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  messages    Message[]
+  members     ConversationMember[]
+}
+
+model ConversationMember {
+  id             String           @id @default(cuid())
+  userId         String
+  conversationId String
+  role           MemberRole       @default(MEMBER)
+  joinedAt       DateTime         @default(now())
+
+  user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  conversation   Conversation     @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, conversationId]) // user can only be in a conversation once
+}
+
+enum MemberRole {
+  ADMIN
+  MEMBER
+}
+
+model Message {
+  id             String    @id @default(cuid())
+  content        String
+  type           MessageType @default(TEXT)
+  senderId       String
+  conversationId String
+  deletedAt      DateTime?  // soft delete
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+
+  sender         User         @relation(fields: [senderId], references: [id])
+  conversation   Conversation @relation(fields: [conversationId], references: [id])
+  readReceipts   MessageReadReceipt[]
+  attachments    Attachment[]
+
+  @@index([conversationId])
+  @@index([senderId])
+}
+
+enum MessageType {
+  TEXT
+  IMAGE
+  VIDEO
+  AUDIO
+}
+
+model MessageReadReceipt {
+  id        String   @id @default(cuid())
+  messageId String
+  userId    String
+  readAt    DateTime @default(now())
+
+  message   Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([messageId, userId])
+}
+
+model Attachment {
+  id        String   @id @default(cuid())
+  messageId String
+  url       String
+  type      String   
+  size      Int     
+  name      String?  
+  createdAt DateTime @default(now())
+
+  message   Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
+}
