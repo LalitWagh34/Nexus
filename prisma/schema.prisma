@@ -71,7 +71,7 @@ enum MemberRole {
 
 model Message {
   id             String    @id @default(cuid())
-  content        String
+  content        String?
   type           MessageType @default(TEXT)
   senderId       String
   conversationId String
