@@ -2,6 +2,7 @@ import express from "express";
 import { errorHandler } from "./middlewares/errorHandler";
 import passport from "./config/passport";
 import authRoutes from "./routes/auth.routes"
+import conversationRoutes from "./routes/conversation.routes"
 
 const app = express();
 
@@ -9,6 +10,7 @@ app.use(express.json());
 app.use(passport.initialize());
 
 app.use("/auth", authRoutes)
+app.use("/conversations", conversationRoutes);
 const PORT = process.env.PORT || 3000;
 
 // Routes
