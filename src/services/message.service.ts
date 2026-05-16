@@ -1,6 +1,7 @@
 import { tr } from "zod/locales";
 import prisma from "../config/prisma";
 import { AppError } from "../utils/AppError";
+import {io} from "../index" 
 
 const assertMember = async(userId:string , conversationId:string)=>{
     const member =await prisma.conversationMember.findUnique({
@@ -47,7 +48,7 @@ export const sendMessage = async(
             updatedAt:new Date()
         }
     })
-
+    io.to(conversationId).emit("message:new", message);
     return message;
 }
 
