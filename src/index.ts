@@ -6,19 +6,27 @@ import authRoutes from "./routes/auth.routes";
 import conversationRoutes from "./routes/conversation.routes";
 import messageRoutes from "./routes/message.routes";
 import { initSocket } from "./sockets/index"; 
+import helmet from "helmet"
+import {logger} from "./middlewares/logger"
+import { authLimiter , globalLimiter } from "./middlewares/rateLimiter";
 
 const app = express();
 const httpServer = createServer(app); 
 
+app.use(helmet());
+app.use(logger);
+app.use(globalLimiter);
 app.use(express.json());
 app.use(passport.initialize());
+
+
 
 
 app.get("/health", (req, res) => {
   res.json({ status: "ok", project: "Nexus" });
 });
 
-app.use("/auth", authRoutes);
+app.use("/auth", authLimiter ,authRoutes);
 app.use("/conversations", conversationRoutes);
 app.use("/conversations/:id/messages", messageRoutes);
 

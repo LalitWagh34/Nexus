@@ -1,6 +1,8 @@
 import { Router } from "express";
 import passport from "passport";
 import { googleCallback , refresh , logout } from "../controllers/auth.controller";
+import { validate } from "../middlewares/validate";
+import { refreshTokenSchema } from "../types/schemas";
 
 const router = Router();
 
@@ -14,9 +16,9 @@ router.get(
 );
 
 
-router.post("/refresh", refresh);
+router.post("/refresh",validate(refreshTokenSchema), refresh);
 
 
-router.post("/logout", logout);
+router.post("/logout",validate(refreshTokenSchema), logout);
 
 export default router;

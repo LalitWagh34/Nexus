@@ -5,12 +5,15 @@ import {
   getConversations,
   getConversation,
 } from "../controllers/conversation.controller";
+import { validate } from "../middlewares/validate";
+import { refreshTokenSchema } from "../types/schemas";
+
 
 const router = Router();
 
 router.use(authenticate); // protect all conversation routes
 
-router.post("/", createConversation);
+router.post("/", validate(refreshTokenSchema) ,createConversation);
 router.get("/", getConversations);
 router.get("/:id", getConversation);
 
