@@ -19,7 +19,8 @@ const assertMember = async(userId:string , conversationId:string)=>{
 export const sendMessage = async(
     userId:string,
     conversationId:string,
-    content :string
+    content :string,
+    attachment?:{url:string ; type:string; size:number; name:string}
 )=>{
     await assertMember(userId ,conversationId)
 
@@ -27,7 +28,17 @@ export const sendMessage = async(
         data:{
             content,
             senderId:userId,
-            conversationId
+            conversationId,
+            ...(attachment && {
+                attachments:{
+                    create:{
+                        url:attachment.url,
+                        type:attachment.type,
+                        size:attachment.size,
+                        name:attachment.name
+                    }
+                }
+            })
         },
         include:{
             sender:{
@@ -36,7 +47,8 @@ export const sendMessage = async(
                     name:true ,
                     avatar:true
                 }
-            }
+            },
+            attachments:true
         }
     })
 

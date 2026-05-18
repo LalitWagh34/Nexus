@@ -9,6 +9,7 @@ import { initSocket } from "./sockets/index";
 import helmet from "helmet"
 import {logger} from "./middlewares/logger"
 import { authLimiter , globalLimiter } from "./middlewares/rateLimiter";
+import uploadRoutes from "./routes/upload.routes";
 
 const app = express();
 const httpServer = createServer(app); 
@@ -29,6 +30,7 @@ app.get("/health", (req, res) => {
 app.use("/auth", authLimiter ,authRoutes);
 app.use("/conversations", conversationRoutes);
 app.use("/conversations/:id/messages", messageRoutes);
+app.use("/upload", uploadRoutes);
 
 app.use(errorHandler);
 

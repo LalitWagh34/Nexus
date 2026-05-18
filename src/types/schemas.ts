@@ -1,8 +1,13 @@
 import {z} from "zod";
 
 export const sendMessageSchema = z.object({
-    content:z.string().min(1, "Message Cannont be Empty").max(2000 , "Message to long")
-
+    content:z.string().min(1, "Message Cannont be Empty").max(2000 , "Message to long"),
+    attachment: z.object({
+        url: z.string().url(),
+        type: z.string(),
+        size: z.number(),
+        name: z.string(),
+    }).optional(),
 });
 
 export const createConversation =z.object({
