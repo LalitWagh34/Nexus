@@ -3,7 +3,7 @@ import { useAuthStore } from './store/authStore'
 import { useThemeStore } from './store/themeStore'
 import { useEffect } from 'react'
 import LoginPage from './pages/LoginPage'
-// import ChatPage from './pages/ChatPage'
+import ChatPage from './pages/ChatPage'
 
 function App() {
   const { accessToken } = useAuthStore()
@@ -20,9 +20,11 @@ function App() {
         <Route path="/login" element={
           accessToken ? <Navigate to="/" /> : <LoginPage />
         } />
-        {/* <Route path="/*" element={
-          accessToken ? <ChatPage /> : <Navigate to="/login" />
-        } /> */}
+        {/* <Route path ="/login"><LoginPage/></Route> */}
+        <Route 
+          path="/*" 
+          element={accessToken ? <ChatPage /> : <Navigate to="/login" />} 
+        />
       </Routes>
     </BrowserRouter>
   )

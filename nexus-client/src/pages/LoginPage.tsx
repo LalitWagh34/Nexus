@@ -1,63 +1,124 @@
 import { MessageSquare } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { useThemeStore } from '@/store/themeStore'
+import { Moon, Sun } from 'lucide-react'
 
 export default function LoginPage() {
   const handleGoogleLogin = () => {
     window.location.href = 'http://localhost:3000/auth/google'
   }
+  const {isDark , toggle} = useThemeStore();
 
   return (
-    <div className="min-h-screen flex items-center justify-center"
-      style={{ backgroundColor: 'var(--bg-primary)' }}>
-      
-      <div className="w-full max-w-sm flex flex-col items-center gap-8">
-        
+    <div style={{
+      minHeight: '100vh',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: 'var(--bg-primary)',
+      padding: '24px'
+    }}>
+      <div style={{
+        width: '100%',
+        maxWidth: '380px',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: '32px'
+      }}>
+
         {/* Logo */}
-        <div className="flex flex-col items-center gap-3">
-          <div className="w-12 h-12 rounded-2xl flex items-center justify-center"
-            style={{ backgroundColor: 'var(--bg-secondary)' }}>
-            <MessageSquare size={24} style={{ color: 'var(--text-primary)' }} />
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
+          <div style={{
+            width: '48px',
+            height: '48px',
+            borderRadius: '16px',
+            backgroundColor: 'var(--bg-secondary)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            border: '1px solid var(--border)'
+          }}>
+            <MessageSquare size={22} color="var(--text-primary)" />
           </div>
-          <div className="text-center">
-            <h1 className="text-2xl font-semibold"
-              style={{ color: 'var(--text-primary)' }}>
-              Nexus
-            </h1>
-            <p className="text-sm mt-1"
-              style={{ color: 'var(--text-secondary)' }}>
-              Real-time messaging, built different.
-            </p>
+          <div style={{ textAlign: 'center' }}>
+            <h1 style={{
+              fontSize: '22px',
+              fontWeight: '600',
+              color: 'var(--text-primary)',
+              letterSpacing: '-0.3px'
+            }}>Nexus</h1>
+            <p style={{
+              fontSize: '13px',
+              color: 'var(--text-secondary)',
+              marginTop: '4px'
+            }}>Real-time messaging, built different.</p>
           </div>
         </div>
 
         {/* Card */}
-        <div className="w-full rounded-2xl border p-8 flex flex-col gap-4"
-          style={{ 
-            backgroundColor: 'var(--bg-secondary)',
-            borderColor: 'var(--border)'
-          }}>
-          
-          <div className="text-center">
-            <h2 className="text-base font-medium"
-              style={{ color: 'var(--text-primary)' }}>
-              Welcome back
-            </h2>
-            <p className="text-sm mt-1"
-              style={{ color: 'var(--text-secondary)' }}>
-              Sign in to continue to Nexus
-            </p>
+        <div style={{
+          width: '100%',
+          borderRadius: '16px',
+          border: '1px solid var(--border)',
+          backgroundColor: 'var(--bg-secondary)',
+          padding: '32px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '20px'
+        }}>
+          <div style={{ textAlign: 'center' }}>
+            <h2 style={{
+              fontSize: '15px',
+              fontWeight: '500',
+              color: 'var(--text-primary)'
+            }}>Welcome back</h2>
+            <p style={{
+              fontSize: '13px',
+              color: 'var(--text-secondary)',
+              marginTop: '4px'
+            }}>Sign in to continue to Nexus</p>
           </div>
+          <button
+            onClick={toggle}
+            style={{
+              position: 'fixed',
+              top: '16px',
+              right: '16px',
+              width: '36px',
+              height: '36px',
+              borderRadius: '10px',
+              border: '1px solid var(--border)',
+              backgroundColor: 'var(--bg-secondary)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+            }}
+          >
+            {isDark ? <Sun size={16} color="var(--text-primary)" /> : <Moon size={16} color="var(--text-primary)" />}
+          </button>
 
           {/* Google Button */}
-          <Button
+          <button
             onClick={handleGoogleLogin}
-            className="w-full h-10 flex items-center gap-3 rounded-lg font-medium text-sm"
             style={{
+              width: '100%',
+              height: '40px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '10px',
+              borderRadius: '10px',
+              border: '1px solid var(--border)',
               backgroundColor: 'var(--bg-hover)',
               color: 'var(--text-primary)',
-              border: '1px solid var(--border)'
+              fontSize: '14px',
+              fontWeight: '500',
+              cursor: 'pointer',
+              transition: 'opacity 0.15s',
             }}
-            variant="outline"
+            onMouseEnter={e => (e.currentTarget.style.opacity = '0.8')}
+            onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
           >
             <svg width="18" height="18" viewBox="0 0 18 18">
               <path fill="#4285F4" d="M16.51 8H8.98v3h4.3c-.18 1-.74 1.48-1.6 2.04v2.01h2.6a7.8 7.8 0 0 0 2.38-5.88c0-.57-.05-.66-.15-1.18z"/>
@@ -66,15 +127,17 @@ export default function LoginPage() {
               <path fill="#EA4335" d="M8.98 4.18c1.17 0 2.23.4 3.06 1.2l2.3-2.3A8 8 0 0 0 1.83 5.4L4.5 7.49a4.77 4.77 0 0 1 4.48-3.3z"/>
             </svg>
             Continue with Google
-          </Button>
-
+          </button>
         </div>
 
         {/* Footer */}
-        <p className="text-xs text-center" style={{ color: 'var(--text-secondary)' }}>
+        <p style={{
+          fontSize: '12px',
+          color: 'var(--text-secondary)',
+          textAlign: 'center'
+        }}>
           By continuing, you agree to our Terms of Service
         </p>
-
       </div>
     </div>
   )
