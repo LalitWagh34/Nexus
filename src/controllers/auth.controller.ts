@@ -2,26 +2,26 @@ import type { NextFunction , Request , Response } from "express";
 import { AppError } from "../utils/AppError";
 import {refreshTokens , revokeRefreshToken, issuesToken} from "../services/auth.service"
 import prisma from "../config/prisma";
+import { signAccessToken, signRefreshToken, verifyRefreshToken } from '../utils/jwt'
+export const googleCallback = async (req: Request, res: Response) => {
+  const user = req.user as any
 
-export const googleCallback =async(
-    req:Request,
-    res:Response,
-    next :NextFunction
-)=>{
-    try{
-        const user = req.user as {id:string}
+  const accessToken = signAccessToken(user.id)
+  const refreshToken = signRefreshToken(user.id)
 
-        if(!user) throw new AppError("Authentication Failed" , 401)
-        
-        const {accessToken , refreshToken} = await issuesToken(user.id);
-        res.json({
-            status: "ok",
-            accessToken,
-            refreshToken,
-        });
-    }catch(error){
-        next(error)
-    }
+  await prisma.refreshToken.create({
+    data: {
+      token: refreshToken,
+      userId: user.id,
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+    },
+  })
+
+  // Redirect to frontend with tokens in URL
+  const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173'
+  res.redirect(
+    `${frontendUrl}/auth/callback?accessToken=${accessToken}&refreshToken=${refreshToken}`
+  )
 }
 
 export const refresh =async(
