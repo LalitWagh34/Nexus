@@ -1,14 +1,60 @@
+import { useEffect, useRef, useState } from 'react'
 import { Send } from 'lucide-react'
-import { useState } from 'react'
+import { useChatStore } from '../store/chatStore'
+import { useAuthStore } from '../store/authStore'
+import { getMessages, sendMessage } from '../api/messages'
+import type { Conversation } from '../types'
 
 interface Props {
-  conversationId: string | null
+  conversation: Conversation | null
 }
 
-export default function ChatArea({ conversationId }: Props) {
-  const [message, setMessage] = useState('')
+export default function ChatArea({ conversation }: Props) {
+  const [input, setInput] = useState('')
+  const [sending, setSending] = useState(false)
+  const bottomRef = useRef<HTMLDivElement>(null)
 
-  if (!conversationId) {
+  const { messages, setMessages, addMessage, setLoadingMessages } = useChatStore()
+  const { user } = useAuthStore()
+
+  useEffect(() => {
+    if (!conversation) return
+
+    const fetch = async () => {
+      setLoadingMessages(true)
+      try {
+        const data = await getMessages(conversation.id)
+        // Messages come desc from API, reverse for display
+        setMessages([...data.messages].reverse())
+      } catch (err) {
+        console.error('Failed to fetch messages:', err)
+      } finally {
+        setLoadingMessages(false)
+      }
+    }
+
+    fetch()
+  }, [conversation?.id])
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [messages])
+
+  const handleSend = async () => {
+    if (!input.trim() || !conversation || sending) return
+    setSending(true)
+    try {
+      const message = await sendMessage(conversation.id, input.trim())
+      addMessage(message)
+      setInput('')
+    } catch (err) {
+      console.error('Failed to send message:', err)
+    } finally {
+      setSending(false)
+    }
+  }
+
+  if (!conversation) {
     return (
       <div style={{
         flex: 1,
@@ -37,7 +83,6 @@ export default function ChatArea({ conversationId }: Props) {
       backgroundColor: 'var(--bg-primary)',
       overflow: 'hidden'
     }}>
-
       {/* Chat Header */}
       <div style={{
         height: '57px',
@@ -59,13 +104,24 @@ export default function ChatArea({ conversationId }: Props) {
           justifyContent: 'center',
           fontSize: '12px',
           fontWeight: '500',
-          color: 'var(--text-secondary)'
-        }}>JD</div>
+          color: 'var(--text-secondary)',
+          overflow: 'hidden'
+        }}>
+          {conversation.avatar
+            ? <img src={conversation.avatar} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            : (conversation.name?.[0] || 'U').toUpperCase()
+          }
+        </div>
         <div>
           <p style={{ fontSize: '14px', fontWeight: '500', color: 'var(--text-primary)' }}>
-            John Doe
+            {conversation.name || 'Unknown'}
           </p>
-          <p style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>Online</p>
+          <p style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
+            {conversation.isGroup
+              ? `${conversation.members?.length || 0} members`
+              : 'Online'
+            }
+          </p>
         </div>
       </div>
 
@@ -78,35 +134,50 @@ export default function ChatArea({ conversationId }: Props) {
         flexDirection: 'column',
         gap: '8px'
       }}>
-        {/* Received message */}
-        <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
-          <div style={{
-            maxWidth: '65%',
-            padding: '10px 14px',
-            borderRadius: '16px 16px 16px 4px',
-            backgroundColor: 'var(--bubble-received)',
-            color: 'var(--bubble-received-text)',
-            fontSize: '14px',
-            lineHeight: '1.5'
-          }}>
-            Hey! How are you doing?
-          </div>
-        </div>
-
-        {/* Sent message */}
-        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-          <div style={{
-            maxWidth: '65%',
-            padding: '10px 14px',
-            borderRadius: '16px 16px 4px 16px',
-            backgroundColor: 'var(--bubble-sent)',
-            color: 'var(--bubble-sent-text)',
-            fontSize: '14px',
-            lineHeight: '1.5'
-          }}>
-            I'm doing great! Working on Nexus 🚀
-          </div>
-        </div>
+        {messages.map(msg => {
+          const isMine = msg.senderId === user?.id
+          return (
+            <div
+              key={msg.id}
+              style={{ display: 'flex', justifyContent: isMine ? 'flex-end' : 'flex-start' }}
+            >
+              <div style={{
+                maxWidth: '65%',
+                padding: '10px 14px',
+                borderRadius: isMine ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
+                backgroundColor: isMine ? 'var(--bubble-sent)' : 'var(--bubble-received)',
+                color: isMine ? 'var(--bubble-sent-text)' : 'var(--bubble-received-text)',
+                fontSize: '14px',
+                lineHeight: '1.5'
+              }}>
+                {/* Show sender name in groups */}
+                {conversation.isGroup && !isMine && (
+                  <p style={{
+                    fontSize: '11px',
+                    fontWeight: '600',
+                    marginBottom: '4px',
+                    opacity: 0.7
+                  }}>
+                    {msg.sender?.name}
+                  </p>
+                )}
+                {msg.content}
+                <p style={{
+                  fontSize: '10px',
+                  marginTop: '4px',
+                  opacity: 0.6,
+                  textAlign: 'right'
+                }}>
+                  {new Date(msg.createdAt).toLocaleTimeString([], {
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  })}
+                </p>
+              </div>
+            </div>
+          )
+        })}
+        <div ref={bottomRef} />
       </div>
 
       {/* Message Input */}
@@ -119,9 +190,9 @@ export default function ChatArea({ conversationId }: Props) {
         flexShrink: 0
       }}>
         <input
-          value={message}
-          onChange={e => setMessage(e.target.value)}
-          onKeyDown={e => e.key === 'Enter' && setMessage('')}
+          value={input}
+          onChange={e => setInput(e.target.value)}
+          onKeyDown={e => e.key === 'Enter' && handleSend()}
           placeholder="Type a message..."
           style={{
             flex: 1,
@@ -136,18 +207,20 @@ export default function ChatArea({ conversationId }: Props) {
           }}
         />
         <button
-          onClick={() => setMessage('')}
+          onClick={handleSend}
+          disabled={sending || !input.trim()}
           style={{
             width: '40px',
             height: '40px',
             borderRadius: '10px',
             border: 'none',
-            backgroundColor: 'var(--bubble-sent)',
+            backgroundColor: sending || !input.trim() ? 'var(--bg-hover)' : 'var(--bubble-sent)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            cursor: 'pointer',
-            flexShrink: 0
+            cursor: sending || !input.trim() ? 'not-allowed' : 'pointer',
+            flexShrink: 0,
+            transition: 'background-color 0.15s'
           }}
         >
           <Send size={16} color="white" />

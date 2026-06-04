@@ -1,9 +1,33 @@
-import Sidebar from '../components/Sidebar.tsx'
+import { useEffect } from 'react'
+import Sidebar from '../components/Sidebar'
 import ChatArea from '../components/ChatArea'
-import { useState } from 'react'
+import { useChatStore } from '../store/chatStore'
+import { getConversations } from '../api/conversations'
 
 export default function ChatPage() {
-  const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null)
+  const {
+    conversations,
+    selectedConversation,
+    setConversations,
+    setSelectedConversation,
+    setLoadingConversations
+  } = useChatStore()
+
+  useEffect(() => {
+    const fetchConversations = async () => {
+      setLoadingConversations(true)
+      try {
+        const data = await getConversations()
+        setConversations(data)
+      } catch (err) {
+        console.error('Failed to fetch conversations:', err)
+      } finally {
+        setLoadingConversations(false)
+      }
+    }
+
+    fetchConversations()
+  }, [])
 
   return (
     <div style={{
@@ -13,10 +37,11 @@ export default function ChatPage() {
       overflow: 'hidden'
     }}>
       <Sidebar
-        selectedId={selectedConversationId}
-        onSelect={setSelectedConversationId}
+        conversations={conversations}
+        selectedId={selectedConversation?.id || null}
+        onSelect={setSelectedConversation}
       />
-      <ChatArea conversationId={selectedConversationId} />
+      <ChatArea conversation={selectedConversation} />
     </div>
   )
 }
