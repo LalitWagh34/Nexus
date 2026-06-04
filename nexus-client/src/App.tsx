@@ -4,12 +4,12 @@ import { useThemeStore } from './store/themeStore'
 import { useEffect } from 'react'
 import LoginPage from './pages/LoginPage'
 import ChatPage from './pages/ChatPage'
+import AuthCallback from './pages/AuthCallback'
 
 function App() {
   const { accessToken } = useAuthStore()
   const { isDark } = useThemeStore()
 
-  // Sync theme on mount
   useEffect(() => {
     document.documentElement.classList.toggle('dark', isDark)
   }, [isDark])
@@ -20,10 +20,11 @@ function App() {
         <Route path="/login" element={
           accessToken ? <Navigate to="/" /> : <LoginPage />
         } />
-        {/* <Route path ="/login"><LoginPage/></Route> */}
-        <Route 
-          path="/*" 
-          element={accessToken ? <ChatPage /> : <Navigate to="/login" />} 
+        {/* Auth callback — must be before /* */}
+        <Route path="/auth/callback" element={<AuthCallback />} />
+        <Route
+          path="/*"
+          element={accessToken ? <ChatPage /> : <Navigate to="/login" />}
         />
       </Routes>
     </BrowserRouter>
